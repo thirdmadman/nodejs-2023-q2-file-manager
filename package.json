@@ -1,0 +1,20 @@
+{
+  "name": "nodejs-2023-q2-file-manager",
+  "version": "1.0.0",
+  "description": "File Manager using Node.js APIs.",
+  "private": true,
+  "main": "/src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thirdmadman/nodejs-2023-q2-file-manager.git"
+  },
+  "author": "thirdmadman",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/thirdmadman/nodejs-2023-q2-file-manager/issues"
+  },
+  "homepage": "https://github.com/thirdmadman/nodejs-2023-q2-file-manager#readme"
+}
