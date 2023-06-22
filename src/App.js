@@ -1,27 +1,23 @@
-import { CLI } from "./CLI.js";
-
-const USER_GREETING = 'Welcome to the File Manager';
-const DEFAULT_USERNAME = 'Username';
+import { CLI } from './CLI.js';
 
 export class App {
-
   cli = new CLI();
 
   constructor() {
-
-    const getUserGreetingText = (name) =>  `${USER_GREETING}, ${name}!`;
-
+    console.clear();
     const getArgs = () => {
       const args = process.argv.slice(2);
       const combinedArgs = args.map((arg) => {
         const argArray = arg.replace('--', '').split('=');
-        return {key: argArray[0], value: argArray[1]};
+        return { key: argArray[0], value: argArray[1] };
       });
-      return(combinedArgs);
+
+      return combinedArgs;
     };
 
-    const userName = getArgs().find((obj) => obj.key === 'username').value || DEFAULT_USERNAME;
+    const userName = getArgs().find((obj) => obj.key === 'username').value;
 
-    this.cli.print(getUserGreetingText(userName));
+    this.cli.setUsername(userName);
+    this.cli.greetUser();
   }
-} 
+}
