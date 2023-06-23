@@ -15,9 +15,9 @@ export class App {
       return combinedArgs;
     };
 
-    const userName = getArgs().find((obj) => obj.key === 'username').value;
+    const userNameObj = getArgs().find((obj) => obj.key === 'username');
 
-    this.cli.setUsername(userName);
+    this.cli.setUsername(userNameObj ? userNameObj.value : null);
     this.cli.greetUser();
   }
 }
