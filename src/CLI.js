@@ -1,5 +1,5 @@
 import readline from 'readline';
-import os from 'os';
+import os, { EOL } from 'os';
 import fsPromises from 'fs/promises';
 import path from 'path';
 
@@ -53,13 +53,11 @@ export class CLI {
     this.readlineInterface.prompt();
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async list(listDirPath = '') {
     const dirPath = path.join(listDirPath);
     return fsPromises.readdir(dirPath);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async checkPathAccess(pathToCheck) {
     try {
       await fsPromises.access(pathToCheck, fsPromises.constants.R_OK);
@@ -69,7 +67,6 @@ export class CLI {
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async readFile(pathToFile) {
     return (await fsPromises.readFile(pathToFile)).toString();
   }
@@ -128,6 +125,38 @@ export class CLI {
         this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
       }
 
+      return;
+    }
+
+    if (string.indexOf('os') === 0) {
+      const command = string.replace('os --', '');
+      let output = '';
+      switch (command) {
+        case 'EOL': {
+          output = EOL;
+          break;
+        }
+        case 'cpus': {
+          output = os.cpus().length;
+          break;
+        }
+        case 'homedir': {
+          output = os.homedir();
+          break;
+        }
+        case 'username': {
+          output = os.userInfo().username;
+          break;
+        }
+        case 'architecture': {
+          output = os.arch();
+          break;
+        }
+        default: {
+          this.print(`Unknown argument: ${command}`);
+        }
+      }
+      this.print(`${output}\n`);
       return;
     }
 
