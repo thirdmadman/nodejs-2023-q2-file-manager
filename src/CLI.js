@@ -71,6 +71,11 @@ export class CLI {
     return (await fsPromises.readFile(pathToFile)).toString();
   }
 
+  async createFile(pathToFile) {
+    await fsPromises.access(path.dirname(pathToFile), fsPromises.F_OK);
+    fsPromises.writeFile(pathToFile, '', { encoding: 'utf-8', flag: 'w' });
+  }
+
   async handleInput(string) {
     if (string === '.exit') {
       this.handleExit();
@@ -116,13 +121,26 @@ export class CLI {
       if (pathAvailable.ok) {
         try {
           const fileContents = await await this.readFile(newPath);
-          console.log(fileContents);
           this.print(fileContents);
         } catch (err) {
           this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
         }
       } else {
         this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('add') === 0) {
+      const newPath = path.resolve(this.currentPath, string.replace('add ', ''));
+
+      try {
+        await this.createFile(newPath);
+
+        this.print(`File "${string.replace('add ', '')}" has been created\n`);
+      } catch (err) {
+        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
       }
 
       return;
