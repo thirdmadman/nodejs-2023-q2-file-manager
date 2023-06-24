@@ -76,6 +76,12 @@ export class CLI {
     fsPromises.writeFile(pathToFile, '', { encoding: 'utf-8', flag: 'w' });
   }
 
+  async renameFile(srcFile, distFile) {
+    await fsPromises.access(srcFile, fsPromises.F_OK);
+
+    return fsPromises.rename(srcFile, distFile);
+  }
+
   async handleInput(string) {
     if (string === '.exit') {
       this.handleExit();
@@ -141,6 +147,25 @@ export class CLI {
         this.print(`File "${string.replace('add ', '')}" has been created\n`);
       } catch (err) {
         this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('rn') === 0) {
+      const args = string.replace('rn ', '').split(' ');
+      if (args.length === 2) {
+        const srcFilePath = path.resolve(this.currentPath, args[0]);
+        const distFilePath = path.resolve(this.currentPath, args[1]);
+        try {
+          await this.renameFile(srcFilePath, distFilePath);
+
+          this.print(`File "${args[0]}" has been renamed\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
