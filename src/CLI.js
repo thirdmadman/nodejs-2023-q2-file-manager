@@ -296,7 +296,7 @@ export class CLI {
           break;
         }
         case 'cpus': {
-          output = os.cpus().length;
+          output = `${os.cpus().length} cores:\n${os.cpus().map((el) => el.model).join('\n')}`;
           break;
         }
         case 'homedir': {
