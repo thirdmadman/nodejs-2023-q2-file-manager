@@ -1,6 +1,7 @@
 import readline from 'readline';
 import os, { EOL } from 'os';
 import fsPromises from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 
 const USER_GREETING = 'Welcome to the File Manager, <username>!\n';
@@ -82,6 +83,15 @@ export class CLI {
     return fsPromises.rename(srcFile, distFile);
   }
 
+  async copyFile(srcFile, distFile) {
+    await fsPromises.access(srcFile, fsPromises.F_OK);
+
+    const readableStream = fs.createReadStream(srcFile);
+    const fileStream = fs.createWriteStream(distFile, { flags: 'w' });
+
+    return readableStream.pipe(fileStream);
+  }
+
   async handleInput(string) {
     if (string === '.exit') {
       this.handleExit();
@@ -161,6 +171,25 @@ export class CLI {
           await this.renameFile(srcFilePath, distFilePath);
 
           this.print(`File "${args[0]}" has been renamed\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('cp') === 0) {
+      const args = string.replace('cp ', '').split(' ');
+      if (args.length === 2) {
+        const srcFilePath = path.resolve(this.currentPath, args[0]);
+        const distFilePath = path.resolve(this.currentPath, args[1]);
+        try {
+          await this.copyFile(srcFilePath, distFilePath);
+
+          this.print(`File "${args[0]}" has been copied\n`);
         } catch (err) {
           this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
         }
