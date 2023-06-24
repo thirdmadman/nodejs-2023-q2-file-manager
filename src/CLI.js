@@ -92,6 +92,12 @@ export class CLI {
     return readableStream.pipe(fileStream);
   }
 
+  async removeFile(pathToFile) {
+    await fsPromises.access(pathToFile, fsPromises.F_OK);
+
+    return fsPromises.unlink(pathToFile);
+  }
+
   async handleInput(string) {
     if (string === '.exit') {
       this.handleExit();
@@ -155,6 +161,20 @@ export class CLI {
         await this.createFile(newPath);
 
         this.print(`File "${string.replace('add ', '')}" has been created\n`);
+      } catch (err) {
+        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('rm') === 0) {
+      const newPath = path.resolve(this.currentPath, string.replace('rm ', ''));
+
+      try {
+        await this.removeFile(newPath);
+
+        this.print(`File "${string.replace('rm ', '')}" has been removed\n`);
       } catch (err) {
         this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
       }
