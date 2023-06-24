@@ -59,9 +59,9 @@ export class CLI {
     return fsPromises.readdir(dirPath);
   }
 
-  async checkPathAccess(pathToCheck) {
+  async checkPathAccess(pathToCheck, constant = fsPromises.constants.F_OK) {
     try {
-      await fsPromises.access(pathToCheck, fsPromises.constants.R_OK);
+      await fsPromises.access(pathToCheck, constant);
       return { ok: true, err: '' };
     } catch (err) {
       return { ok: false, err };
@@ -73,23 +73,32 @@ export class CLI {
   }
 
   async createFile(pathToFile) {
-    await fsPromises.access(path.dirname(pathToFile), fsPromises.F_OK);
-    fsPromises.writeFile(pathToFile, '', { encoding: 'utf-8', flag: 'w' });
+    const isAvailable = await this.checkPathAccess(path.dirname(pathToFile), fsPromises.F_OK);
+    if (isAvailable.ok) {
+      return fsPromises.writeFile(pathToFile, '', { encoding: 'utf-8', flag: 'w' });
+    }
+    throw isAvailable.err;
   }
 
   async renameFile(srcFile, distFile) {
-    await fsPromises.access(srcFile, fsPromises.F_OK);
-
-    return fsPromises.rename(srcFile, distFile);
+    const isAvailable = await this.checkPathAccess(srcFile, fsPromises.F_OK);
+    if (isAvailable.ok) {
+      return fsPromises.rename(srcFile, distFile);
+    }
+    throw isAvailable.err;
   }
 
   async copyFile(srcFile, distFile) {
-    await fsPromises.access(srcFile, fsPromises.F_OK);
+    const isAvailable = await this.checkPathAccess(srcFile, fsPromises.R_OK);
+    if (isAvailable.ok) {
+      await this.createFile(distFile);
 
-    const readableStream = fs.createReadStream(srcFile);
-    const fileStream = fs.createWriteStream(distFile, { flags: 'w' });
+      const readableStream = fs.createReadStream(srcFile);
+      const fileStream = fs.createWriteStream(distFile, { flags: 'w' });
 
-    return readableStream.pipe(fileStream);
+      return readableStream.pipe(fileStream);
+    }
+    throw isAvailable.err;
   }
 
   async removeFile(pathToFile) {
@@ -210,6 +219,26 @@ export class CLI {
           await this.copyFile(srcFilePath, distFilePath);
 
           this.print(`File "${args[0]}" has been copied\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('mv') === 0) {
+      const args = string.replace('mv ', '').split(' ');
+      if (args.length === 2) {
+        const srcFilePath = path.resolve(this.currentPath, args[0]);
+        const distFilePath = path.resolve(this.currentPath, args[1]);
+        try {
+          await this.copyFile(srcFilePath, distFilePath);
+          await this.removeFile(srcFilePath);
+
+          this.print(`File "${args[0]}" has been moved\n`);
         } catch (err) {
           this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
         }
