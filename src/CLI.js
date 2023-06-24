@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import readline from 'readline';
 import os, { EOL } from 'os';
 import fsPromises from 'fs/promises';
@@ -105,6 +106,20 @@ export class CLI {
     await fsPromises.access(pathToFile, fsPromises.F_OK);
 
     return fsPromises.unlink(pathToFile);
+  }
+
+  async getFileHash(pathToFile) {
+    const isAvailable = await this.checkPathAccess(pathToFile, fsPromises.R_OK);
+    if (isAvailable.ok) {
+      return new Promise((resolve, reject) => {
+        const hash = crypto.createHash('sha256');
+        const fileStream = fs.createReadStream(pathToFile);
+        fileStream.on('error', (err) => reject(err));
+        fileStream.on('data', (chunk) => hash.update(chunk));
+        fileStream.on('end', () => resolve(hash.digest('hex')));
+      });
+    }
+    throw isAvailable.err;
   }
 
   async handleInput(string) {
@@ -278,6 +293,20 @@ export class CLI {
         }
       }
       this.print(`${output}\n`);
+      return;
+    }
+
+    if (string.indexOf('hash') === 0) {
+      const newPath = path.resolve(this.currentPath, string.replace('hash ', ''));
+
+      try {
+        const hash = await this.getFileHash(newPath);
+
+        this.print(`File hash is:\n${hash}\n`);
+      } catch (err) {
+        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+      }
+
       return;
     }
 
