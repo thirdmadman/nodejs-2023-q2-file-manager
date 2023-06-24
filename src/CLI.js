@@ -4,6 +4,7 @@ import os, { EOL } from 'os';
 import fsPromises from 'fs/promises';
 import fs from 'fs';
 import path from 'path';
+import { createGzip, createGunzip } from 'zlib';
 
 const USER_GREETING = 'Welcome to the File Manager, <username>!\n';
 const DEFAULT_USERNAME = 'Username';
@@ -118,6 +119,28 @@ export class CLI {
         fileStream.on('data', (chunk) => hash.update(chunk));
         fileStream.on('end', () => resolve(hash.digest('hex')));
       });
+    }
+    throw isAvailable.err;
+  }
+
+  async compressFile(srcFilePath, distFilePath) {
+    const isAvailable = await this.checkPathAccess(srcFilePath, fsPromises.R_OK);
+    if (isAvailable.ok) {
+      const compressOutputStream = fs.createWriteStream(distFilePath);
+      const inputFileStream = fs.createReadStream(srcFilePath);
+
+      return inputFileStream.pipe(createGzip()).pipe(compressOutputStream);
+    }
+    throw isAvailable.err;
+  }
+
+  async decompressFile(srcFilePath, distFilePath) {
+    const isAvailable = await this.checkPathAccess(srcFilePath, fsPromises.R_OK);
+    if (isAvailable.ok) {
+      const decompressOutputStream = fs.createWriteStream(distFilePath);
+      const compressedInputFileStream = fs.createReadStream(srcFilePath);
+
+      return compressedInputFileStream.pipe(createGunzip()).pipe(decompressOutputStream);
     }
     throw isAvailable.err;
   }
@@ -305,6 +328,44 @@ export class CLI {
         this.print(`File hash is:\n${hash}\n`);
       } catch (err) {
         this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('compress') === 0) {
+      const args = string.replace('compress ', '').split(' ');
+      if (args.length === 2) {
+        const srcFilePath = path.resolve(this.currentPath, args[0]);
+        const distFilePath = path.resolve(this.currentPath, args[1]);
+        try {
+          await this.compressFile(srcFilePath, distFilePath);
+
+          this.print(`File "${args[0]}" has been compressed\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
+      }
+
+      return;
+    }
+
+    if (string.indexOf('decompress') === 0) {
+      const args = string.replace('decompress ', '').split(' ');
+      if (args.length === 2) {
+        const srcFilePath = path.resolve(this.currentPath, args[0]);
+        const distFilePath = path.resolve(this.currentPath, args[1]);
+        try {
+          await this.decompressFile(srcFilePath, distFilePath);
+
+          this.print(`File "${args[0]}" has been decompress\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
