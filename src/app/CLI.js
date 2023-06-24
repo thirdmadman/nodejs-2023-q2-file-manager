@@ -1,13 +1,13 @@
 import readline from 'readline';
 import os from 'os';
 import path from 'path';
-import { checkPathAccess } from './utils.js';
+import { checkPathAccess } from './utils/utils.js';
 import {
   list, readFile, renameFile, copyFile, removeFile, createFile,
-} from './basicFileUtils.js';
-import { getConstant } from './constantsUtils.js';
-import { getFileHash } from './hashUtils.js';
-import { compressFile, decompressFile } from './compressUtils.js';
+} from './utils/basicFileUtils.js';
+import { getConstant } from './utils/constantsUtils.js';
+import { getFileHash } from './utils/hashUtils.js';
+import { compressFile, decompressFile } from './utils/compressUtils.js';
 
 const USER_GREETING = 'Welcome to the File Manager, <username>!\n';
 const DEFAULT_USERNAME = 'Username';
@@ -16,7 +16,7 @@ const DEFAULT_GOODBYE = 'Thank you for using File Manager, <username>, goodbye!\
 const DEFAULT_CURRENT_FOLDER_NAVIGATION_TEXT = 'You are currently in <path>\n';
 const CUSTOM_CURRENT_FOLDER_NAVIGATION_TEXT = '<path>> ';
 
-const IS_CUSTOM_CURRENT_FOLDER_NAVIGATION = true;
+const IS_CUSTOM_CURRENT_FOLDER_NAVIGATION = false;
 
 const DEFAULT_ERROR_TEXT = 'Operation failed';
 
