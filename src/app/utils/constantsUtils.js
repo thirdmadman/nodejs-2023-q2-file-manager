@@ -8,7 +8,8 @@ export const getConstant = (command) => {
       break;
     }
     case 'cpus': {
-      output = `${os.cpus().length} cores:\n${os.cpus().map((el) => el.model).join('\n')}`;
+      const getCpuString = (el, i) => `${i}:\t"${el.model}"\t${el.speed / 1000} GHz`;
+      output = `${os.cpus().length} cores:\n${os.cpus().map(getCpuString).join('\n')}`;
       break;
     }
     case 'homedir': {
