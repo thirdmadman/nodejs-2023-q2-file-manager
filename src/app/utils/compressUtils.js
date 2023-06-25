@@ -1,6 +1,6 @@
 import fsPromises from 'fs/promises';
 import fs from 'fs';
-import { createGzip, createGunzip } from 'zlib';
+import { createBrotliCompress, createBrotliDecompress } from 'zlib';
 import { checkPathAccess } from './utils.js';
 
 export const compressFile = async (srcFilePath, distFilePath) => {
@@ -9,7 +9,7 @@ export const compressFile = async (srcFilePath, distFilePath) => {
     const compressOutputStream = fs.createWriteStream(distFilePath);
     const inputFileStream = fs.createReadStream(srcFilePath);
 
-    return inputFileStream.pipe(createGzip()).pipe(compressOutputStream);
+    return inputFileStream.pipe(createBrotliCompress()).pipe(compressOutputStream);
   }
   throw isAvailable.err;
 };
@@ -20,7 +20,7 @@ export const decompressFile = async (srcFilePath, distFilePath) => {
     const decompressOutputStream = fs.createWriteStream(distFilePath);
     const compressedInputFileStream = fs.createReadStream(srcFilePath);
 
-    return compressedInputFileStream.pipe(createGunzip()).pipe(decompressOutputStream);
+    return compressedInputFileStream.pipe(createBrotliDecompress()).pipe(decompressOutputStream);
   }
   throw isAvailable.err;
 };
