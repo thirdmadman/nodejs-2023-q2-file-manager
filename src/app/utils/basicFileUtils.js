@@ -8,7 +8,16 @@ export const list = async (listDirPath = '') => {
   return fsPromises.readdir(dirPath, { withFileTypes: true });
 };
 
-export const readFile = async (pathToFile) => (await fsPromises.readFile(pathToFile)).toString();
+export const readFile = async (pathToFile) => {
+  const readStream = fs.createReadStream(pathToFile);
+
+  const promise = new Promise((resolve) => {
+    const chunks = [];
+    readStream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+    readStream.on('end', () => resolve(Buffer.concat(chunks).toString()));
+  });
+  return promise;
+};
 
 export const createFile = async (pathToFile) => {
   const isAvailable = await checkPathAccess(path.dirname(pathToFile), fsPromises.F_OK);
