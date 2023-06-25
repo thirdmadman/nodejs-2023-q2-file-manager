@@ -29,7 +29,7 @@ export const renameFile = async (srcFile, distFile) => {
 export const copyFile = async (srcFile, distFile) => {
   const isAvailable = await checkPathAccess(srcFile, fsPromises.R_OK);
   if (isAvailable.ok) {
-    await this.createFile(distFile);
+    await createFile(distFile);
 
     const readableStream = fs.createReadStream(srcFile);
     const fileStream = fs.createWriteStream(distFile, { flags: 'w' });
