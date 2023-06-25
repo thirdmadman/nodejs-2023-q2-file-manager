@@ -4,7 +4,7 @@ export const getConstant = (command) => {
   let output = '';
   switch (command) {
     case 'EOL': {
-      output = EOL;
+      output = EOL === '\r\n' ? '\\r\\n\r\n' : '\\n\n';
       break;
     }
     case 'cpus': {
