@@ -103,8 +103,8 @@ export class CLI {
       const pathAvailable = (await checkPathAccess(newPath));
       if (pathAvailable.ok) {
         try {
-          const fileContents = await await readFile(newPath);
-          this.print(fileContents);
+          const fileContents = await readFile(newPath);
+          this.print(`${fileContents}\n`);
         } catch (err) {
           this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
         }
