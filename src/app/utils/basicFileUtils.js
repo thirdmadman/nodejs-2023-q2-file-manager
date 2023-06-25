@@ -5,7 +5,7 @@ import { checkPathAccess } from './utils.js';
 
 export const list = async (listDirPath = '') => {
   const dirPath = path.join(listDirPath);
-  return fsPromises.readdir(dirPath);
+  return fsPromises.readdir(dirPath, { withFileTypes: true });
 };
 
 export const readFile = async (pathToFile) => (await fsPromises.readFile(pathToFile)).toString();

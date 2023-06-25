@@ -90,8 +90,13 @@ export class CLI {
 
     if (string === 'ls') {
       try {
-        const files = (await list(this.currentPath)).join('\n');
-        this.print(`${files}\n`);
+        const fullList = (await list(this.currentPath));
+        const files = fullList.filter((el) => !el.isDirectory()).sort();
+        const dirs = fullList.filter((el) => el.isDirectory()).sort();
+        const filesString = files.map((el) => `"${el.name}"\t"file"\n`);
+        const dirsString = dirs.map((el) => `"${el.name}"\t"directory"\n`);
+        const output = [...dirsString, ...filesString].map((el, i) => `${i}\t${el}`).join('');
+        this.print(output);
       } catch (err) {
         this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
       }
