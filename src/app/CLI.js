@@ -60,6 +60,29 @@ export class CLI {
   }
 
   async handleInput(string) {
+    const parseTowPathArguments = (argsString) => {
+      if (argsString.includes('\'')) {
+        if ((argsString.match(/'/g) || []).length === 4) {
+          const argsArray = argsString.split('\'');
+          return argsArray.slice(1).filter((el, i) => i !== 1).slice(0, -1);
+        }
+        return null;
+      }
+      return argsString.split(' ');
+    };
+
+    const parseOnePathArgument = (argsString) => {
+      if (argsString.includes('\'')) {
+        if ((argsString.match(/'/g) || []).length === 2) {
+          const argsArray = argsString.split('\'');
+          return argsArray.filter((el, i) => i === 1)[0];
+        }
+        return null;
+      }
+
+      return argsString;
+    };
+
     if (string === '.exit') {
       this.handleExit();
       return;
@@ -86,66 +109,92 @@ export class CLI {
     }
 
     if (string.indexOf('cd') === 0) {
-      const newPath = path.resolve(this.currentPath, string.replace('cd ', ''));
-      const pathAvailable = (await checkPathAccess(newPath));
-      if (pathAvailable.ok) {
-        this.currentPath = newPath;
-        this.print('');
+      const argSrc = string.replace('cd ', '');
+      const argPath = parseOnePathArgument(argSrc);
+      if (argPath) {
+        const newPath = path.resolve(this.currentPath, argPath);
+        const pathAvailable = (await checkPathAccess(newPath));
+        if (pathAvailable.ok) {
+          this.currentPath = newPath;
+          this.print('');
+        } else {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
+        }
       } else {
-        this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
     }
 
     if (string.indexOf('cat') === 0) {
-      const newPath = path.resolve(this.currentPath, string.replace('cat ', ''));
-      const pathAvailable = (await checkPathAccess(newPath));
-      if (pathAvailable.ok) {
-        try {
-          const fileContents = await readFile(newPath);
-          this.print(`${fileContents}\n`);
-        } catch (err) {
-          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+      const argSrc = string.replace('cat ', '');
+      const argPath = parseOnePathArgument(argSrc);
+      if (argPath) {
+        const newPath = path.resolve(this.currentPath, argPath);
+        const pathAvailable = (await checkPathAccess(newPath));
+        if (pathAvailable.ok) {
+          try {
+            const fileContents = await readFile(newPath);
+            this.print(`${fileContents}\n`);
+          } catch (err) {
+            this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+          }
+        } else {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
         }
       } else {
-        this.print(`${DEFAULT_ERROR_TEXT}: ${pathAvailable.err}\n`);
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
     }
 
     if (string.indexOf('add') === 0) {
-      const newPath = path.resolve(this.currentPath, string.replace('add ', ''));
+      const argSrc = string.replace('add ', '');
+      const argPath = parseOnePathArgument(argSrc);
+      if (argPath) {
+        const newPath = path.resolve(this.currentPath, argPath);
 
-      try {
-        await createFile(newPath);
+        try {
+          await createFile(newPath);
 
-        this.print(`File "${string.replace('add ', '')}" has been created\n`);
-      } catch (err) {
-        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+          this.print(`File "${string.replace('add ', '')}" has been created\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
     }
 
     if (string.indexOf('rm') === 0) {
-      const newPath = path.resolve(this.currentPath, string.replace('rm ', ''));
+      const argSrc = string.replace('rm ', '');
+      const argPath = parseOnePathArgument(argSrc);
+      if (argPath) {
+        const newPath = path.resolve(this.currentPath, argPath);
 
-      try {
-        await removeFile(newPath);
+        try {
+          await removeFile(newPath);
 
-        this.print(`File "${string.replace('rm ', '')}" has been removed\n`);
-      } catch (err) {
-        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+          this.print(`File "${string.replace('rm ', '')}" has been removed\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
     }
 
     if (string.indexOf('rn') === 0) {
-      const args = string.replace('rn ', '').split(' ');
-      if (args.length === 2) {
+      const argsSrc = string.replace('rn ', '');
+      const args = parseTowPathArguments(argsSrc);
+
+      if (args && args.length === 2) {
         const srcFilePath = path.resolve(this.currentPath, args[0]);
         const distFilePath = path.resolve(this.currentPath, args[1]);
         try {
@@ -163,10 +212,13 @@ export class CLI {
     }
 
     if (string.indexOf('cp') === 0) {
-      const args = string.replace('cp ', '').split(' ');
-      if (args.length === 2) {
+      const argsSrc = string.replace('cp ', '');
+      const args = parseTowPathArguments(argsSrc);
+      if (args && args.length === 2) {
         const srcFilePath = path.resolve(this.currentPath, args[0]);
         const distFilePath = path.resolve(this.currentPath, args[1]);
+
+        console.log(srcFilePath, distFilePath);
         try {
           await copyFile(srcFilePath, distFilePath);
 
@@ -182,8 +234,10 @@ export class CLI {
     }
 
     if (string.indexOf('mv') === 0) {
-      const args = string.replace('mv ', '').split(' ');
-      if (args.length === 2) {
+      const argsSrc = string.replace('mv ', '');
+      const args = parseTowPathArguments(argsSrc);
+
+      if (args && args.length === 2) {
         const srcFilePath = path.resolve(this.currentPath, args[0]);
         const distFilePath = path.resolve(this.currentPath, args[1]);
         try {
@@ -214,22 +268,30 @@ export class CLI {
     }
 
     if (string.indexOf('hash') === 0) {
-      const newPath = path.resolve(this.currentPath, string.replace('hash ', ''));
+      const argSrc = string.replace('hash ', '');
+      const argPath = parseOnePathArgument(argSrc);
+      if (argPath) {
+        const newPath = path.resolve(this.currentPath, argPath);
 
-      try {
-        const hash = await getFileHash(newPath);
+        try {
+          const hash = await getFileHash(newPath);
 
-        this.print(`File hash is:\n${hash}\n`);
-      } catch (err) {
-        this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+          this.print(`File hash is:\n${hash}\n`);
+        } catch (err) {
+          this.print(`${DEFAULT_ERROR_TEXT}: ${err}\n`);
+        }
+      } else {
+        this.print(`${DEFAULT_ERROR_TEXT}: arguments is invalid\n`);
       }
 
       return;
     }
 
     if (string.indexOf('compress') === 0) {
-      const args = string.replace('compress ', '').split(' ');
-      if (args.length === 2) {
+      const argsSrc = string.replace('compress ', '');
+      const args = parseTowPathArguments(argsSrc);
+
+      if (args && args.length === 2) {
         const srcFilePath = path.resolve(this.currentPath, args[0]);
         const distFilePath = path.resolve(this.currentPath, args[1]);
         try {
@@ -247,8 +309,10 @@ export class CLI {
     }
 
     if (string.indexOf('decompress') === 0) {
-      const args = string.replace('decompress ', '').split(' ');
-      if (args.length === 2) {
+      const argsSrc = string.replace('decompress ', '');
+      const args = parseTowPathArguments(argsSrc);
+
+      if (args && args.length === 2) {
         const srcFilePath = path.resolve(this.currentPath, args[0]);
         const distFilePath = path.resolve(this.currentPath, args[1]);
         try {
