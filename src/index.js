@@ -1,1 +1,3 @@
-throw new Error('Not implemented');
+import { App } from './app/App.js';
+
+const app = new App();
